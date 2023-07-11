@@ -18,13 +18,13 @@ package controller
 
 import (
 	"context"
+	"log"
 
+	clustersv1 "github.com/rakshitgondwal/clusterify.git/api/v1"
+	"github.com/rakshitgondwal/clusterify.git/pkg/civo"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	clustersv1 "github.com/rakshitgondwal/clusterify.git/api/v1"
 )
 
 // CivoClusterReconciler reconciles a CivoCluster object
@@ -47,9 +47,24 @@ type CivoClusterReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.15.0/pkg/reconcile
 func (r *CivoClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log.Printf("reconcile called")
+	cluster := &clustersv1.CivoCluster{}
 
-	// TODO(user): your logic here
+	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	clusterConfig := civo.CreateClusterConfig(cluster.Spec.ClusterName, cluster.Spec.Region)
+	k8sCluster, err := civo.CreateCluster(clusterConfig, cluster.Spec.APIKey)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if k8sCluster.Ready {
+		cluster.Status.RunningStatus = "running"
+	} else {
+		cluster.Status.RunningStatus = "not running"
+	}
 
 	return ctrl.Result{}, nil
 }
