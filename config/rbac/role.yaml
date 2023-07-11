@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - clusters.core.clusterify.io
+  resources:
+  - civoclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - clusters.core.clusterify.io
+  resources:
+  - civoclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - clusters.core.clusterify.io
+  resources:
+  - civoclusters/status
+  verbs:
+  - get
+  - patch
+  - update
